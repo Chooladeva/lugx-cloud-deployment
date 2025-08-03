@@ -1,0 +1,39 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: lugx-ingress
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: app.lugx.cloud
+      http:
+        paths:
+          - path: /api/analytics/
+            pathType: Prefix
+            backend:
+              service:
+                name: analytics-service
+                port:
+                  number: 8000
+          - path: /api/orders
+            pathType: Prefix
+            backend:
+              service:
+                name: order-service
+                port:
+                  number: 8001
+          - path: /api/games
+            pathType: Prefix
+            backend:
+              service:
+                name: game-service
+                port:
+                  number: 8000
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: lugx-frontend-service
+                port:
+                  number: 80
+

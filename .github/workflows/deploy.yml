@@ -1,0 +1,94 @@
+name: CI/CD Blue-Green Deployment
+
+on:
+  push:
+    branches: [main]
+
+env:
+  PROJECT_ID: ${{ secrets.GKE_PROJECT }}
+  CLUSTER: ${{ secrets.GKE_CLUSTER }}
+  ZONE: ${{ secrets.GKE_ZONE }}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Authenticate to GCP
+      uses: google-github-actions/auth@v2
+      with:
+        credentials_json: ${{ secrets.GKE_SA_KEY_JSON }}
+
+    - name: Setup gcloud CLI
+      uses: google-github-actions/setup-gcloud@v1
+
+    - name: Configure kubectl
+      run: gcloud container clusters get-credentials $CLUSTER --zone $ZONE --project $PROJECT_ID
+
+    - name: Get Active Color
+      id: get-active-color
+      run: |
+        # You can get active color from a file or configmap. Here we default to blue for simplicity.
+        echo "::set-output name=color::blue"
+
+    - name: Set Inactive Color
+      id: set-inactive-color
+      run: |
+        if [ "${{ steps.get-active-color.outputs.color }}" = "blue" ]; then
+          echo "::set-output name=inactive::green"
+        else
+          echo "::set-output name=inactive::blue"
+        fi
+
+    - name: Build and Push Game Service Image
+      run: |
+        docker build -t chooladeva/game-service:${{ github.sha }} ./game-service
+        docker push chooladeva/game-service:${{ github.sha }}
+
+    - name: Build and Push Order Service Image
+      run: |
+        docker build -t chooladeva/order-service:${{ github.sha }} ./order-service
+        docker push chooladeva/order-service:${{ github.sha }}
+
+    - name: Build and Push Analytics Service Image
+      run: |
+        docker build -t chooladeva/analytics-service:${{ github.sha }} ./analytics-service
+        docker push chooladeva/analytics-service:${{ github.sha }}
+
+    - name: Deploy Game Service to Inactive Color
+      run: |
+        kubectl set image deployment/game-service-${{ steps.set-inactive-color.outputs.inactive }} game-service=chooladeva/game-service:${{ github.sha }}
+        kubectl rollout status deployment/game-service-${{ steps.set-inactive-color.outputs.inactive }}
+
+    - name: Deploy Order Service to Inactive Color
+      run: |
+        kubectl set image deployment/order-service-${{ steps.set-inactive-color.outputs.inactive }} order-service=chooladeva/order-service:${{ github.sha }}
+        kubectl rollout status deployment/order-service-${{ steps.set-inactive-color.outputs.inactive }}
+
+    - name: Deploy Analytics Service to Inactive Color
+      run: |
+        kubectl set image deployment/analytics-service-${{ steps.set-inactive-color.outputs.inactive }} analytics-service=chooladeva/analytics-service:${{ github.sha }}
+        kubectl rollout status deployment/analytics-service-${{ steps.set-inactive-color.outputs.inactive }}
+
+    - name: Run Integration Tests on Inactive Color
+      run: |
+        INACTIVE=${{ steps.set-inactive-color.outputs.inactive }}
+        curl -f http://app.lugx.cloud:8080/api/games/health || exit 1
+        curl -f http://app.lugx.cloud:8080/api/orders/health || exit 1
+        curl -f http://app.lugx.cloud:8080/api/analytics/health || exit 1
+
+    - name: Switch Ingress to Inactive Color
+      run: |
+        INACTIVE=${{ steps.set-inactive-color.outputs.inactive }}
+        kubectl patch ingress lugx-ingress --type=json -p='[
+          {"op": "replace", "path": "/spec/rules/0/http/paths/0/backend/service/name", "value": "game-service-'$INACTIVE'"},
+          {"op": "replace", "path": "/spec/rules/0/http/paths/1/backend/service/name", "value": "order-service-'$INACTIVE'"},
+          {"op": "replace", "path": "/spec/rules/0/http/paths/2/backend/service/name", "value": "analytics-service-'$INACTIVE'"}
+        ]'
+
+    - name: Update Active Color Marker
+      run: |
+        echo "TODO: update persistent storage or repo with new active color $INACTIVE"

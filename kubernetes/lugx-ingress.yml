@@ -12,21 +12,21 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: analytics-service
+                name: analytics-service-green
                 port:
                   number: 8000
           - path: /api/orders
             pathType: Prefix
             backend:
               service:
-                name: order-service
+                name: order-service-green
                 port:
                   number: 8001
           - path: /api/games
             pathType: Prefix
             backend:
               service:
-                name: game-service
+                name: game-service-green
                 port:
                   number: 8000
           - path: /
@@ -36,4 +36,3 @@ spec:
                 name: lugx-frontend-service
                 port:
                   number: 80
-

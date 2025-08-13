@@ -2,7 +2,7 @@ name: CI/CD Blue-Green Deployment
 
 on:
   push:
-    branches: [main]
+    branches: [new-main1]
 
 env:
   PROJECT_ID: ${{ secrets.GKE_PROJECT }}

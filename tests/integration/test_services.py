@@ -1,21 +1,24 @@
+import os
 import requests
+import pytest
 
-# Port-forwarded endpoints for inactive pods in CI/CD workflow
-GAME_URL = "http://localhost:8001/api/games/"
-ORDER_URL = "http://localhost:8002/api/orders/"
-ANALYTICS_URL = "http://localhost:8003/api/analytics/event"
+# Read base URLs from environment variables (set in GitHub Actions)
+GAMES_URL = os.getenv("BASE_URL_GAMES", "http://app.lugx.cloud/api/games/")
+ORDERS_URL = os.getenv("BASE_URL_ORDERS", "http://app.lugx.cloud/api/orders/")
+ANALYTICS_URL = os.getenv("BASE_URL_ANALYTICS", "http://app.lugx.cloud/api/analytics/event")
 
 def test_game_service():
     """Check that Game Service API returns 200 OK"""
-    r = requests.get(GAME_URL)
-    assert r.status_code == 200, f"Game Service failed with status {r.status_code}"
+    r = requests.get(GAMES_URL)
+    assert r.status_code == 200
 
 def test_order_service():
     """Check that Order Service API returns 200 OK"""
-    r = requests.get(ORDER_URL)
-    assert r.status_code == 200, f"Order Service failed with status {r.status_code}"
+    r = requests.get(ORDERS_URL)
+    assert r.status_code == 200
 
 def test_analytics_service():
     """Check that Analytics Service API returns 200 OK"""
     r = requests.get(ANALYTICS_URL)
-    assert r.status_code == 200, f"Analytics Service failed with status {r.status_code}"
+    assert r.status_code == 200
+

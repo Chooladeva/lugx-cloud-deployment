@@ -28,13 +28,13 @@ jobs:
       uses: google-github-actions/setup-gcloud@v1
 
     # -------------------------
-    # Install GKE auth plugin
+    # Install GKE Auth Plugin (correct method)
     # -------------------------
-    - name: Install gke-gcloud-auth-plugin
+    - name: Install GKE Auth Plugin
       run: |
-        sudo apt-get update
-        sudo apt-get install -y google-cloud-sdk-gke-gcloud-auth-plugin
-        gcloud components update
+        gcloud components update -q
+        gcloud components install gke-gcloud-auth-plugin -q
+        export USE_GKE_GCLOUD_AUTH_PLUGIN=True
 
     # -------------------------
     # Configure kubectl
@@ -56,14 +56,11 @@ jobs:
       id: set-inactive-color
       run: |
         active="${{ steps.get-active-color.outputs.active }}"
-
         if [ "$active" = "blue" ]; then
           inactive="green"
         else
           inactive="blue"
         fi
-
-        echo "Inactive color set to $inactive"
         echo "inactive=$inactive" >> $GITHUB_OUTPUT
 
     # -------------------------
@@ -122,7 +119,7 @@ jobs:
         PID2=$!
         kubectl port-forward deployment/analytics-service-$INACTIVE 8003:8080 &
         PID3=$!
-        sleep 5  # Allow port-forward to start
+        sleep 5
 
         echo "Running pytest integration suite..."
         pytest tests/integration/

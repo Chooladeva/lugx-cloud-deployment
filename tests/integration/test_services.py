@@ -2,10 +2,10 @@ import os
 import requests
 import pytest
 
-# Read base URLs from environment variables (set in GitHub Actions)
-GAMES_URL = os.getenv("BASE_URL_GAMES", "http://app.lugx.cloud/api/games/")
-ORDERS_URL = os.getenv("BASE_URL_ORDERS", "http://app.lugx.cloud/api/orders/")
-ANALYTICS_URL = os.getenv("BASE_URL_ANALYTICS", "http://app.lugx.cloud/api/analytics/event")
+# Read base URLs from environment variables
+GAMES_URL = os.environ.get("BASE_URL_GAMES")
+ORDERS_URL = os.environ.get("BASE_URL_ORDERS")
+ANALYTICS_URL = os.environ.get("BASE_URL_ANALYTICS")
 
 def test_game_service():
     """Check that Game Service API returns 200 OK"""

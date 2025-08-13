@@ -1,0 +1,141 @@
+name: CI/CD Blue-Green Deployment
+
+on:
+  push:
+    branches: [main]
+
+env:
+  PROJECT_ID: ${{ secrets.GKE_PROJECT }}
+  CLUSTER: ${{ secrets.GKE_CLUSTER }}
+  ZONE: ${{ secrets.GKE_ZONE }}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    # -------------------------
+    # Checkout Code
+    # -------------------------
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    # -------------------------
+    # Authenticate to GCP
+    # -------------------------
+    - name: Authenticate to GCP
+      uses: google-github-actions/auth@v2
+      with:
+        credentials_json: ${{ secrets.GKE_SA_KEY_JSON }}
+
+    - name: Setup gcloud CLI
+      uses: google-github-actions/setup-gcloud@v1
+
+    - name: Configure kubectl
+      run: gcloud container clusters get-credentials $CLUSTER --zone $ZONE --project $PROJECT_ID
+
+    # -------------------------
+    # Determine Active / Inactive Color
+    # -------------------------
+    - name: Get Active Color
+      id: get-active-color
+      run: |
+        # Default to blue; replace with ConfigMap/repo tracking in production
+        echo "active=blue" >> $GITHUB_ENV
+
+    - name: Set Inactive Color
+      id: set-inactive-color
+      run: |
+        if [ "$active" = "blue" ]; then
+          echo "inactive=green" >> $GITHUB_ENV
+        else
+          echo "inactive=blue" >> $GITHUB_ENV
+
+    # -------------------------
+    # Build & Push Docker Images
+    # -------------------------
+    - uses: docker/setup-buildx-action@v2
+
+    - name: Cache Docker layers
+      uses: actions/cache@v3
+      with:
+        path: /tmp/.buildx-cache
+        key: ${{ runner.os }}-buildx-${{ github.sha }}
+
+    - name: Login to Docker Hub
+      uses: docker/login-action@v2
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+    - name: Build & Push Game Service
+      run: |
+        docker build --cache-from=type=local,src=/tmp/.buildx-cache -t chooladeva/game-service:${{ github.sha }} ./game-service
+        docker push chooladeva/game-service:${{ github.sha }}
+
+    - name: Build & Push Order Service
+      run: |
+        docker build --cache-from=type=local,src=/tmp/.buildx-cache -t chooladeva/order-service:${{ github.sha }} ./order-service
+        docker push chooladeva/order-service:${{ github.sha }}
+
+    - name: Build & Push Analytics Service
+      run: |
+        docker build --cache-from=type=local,src=/tmp/.buildx-cache -t chooladeva/analytics-service:${{ github.sha }} ./analytics-service
+        docker push chooladeva/analytics-service:${{ github.sha }}
+
+    # -------------------------
+    # Deploy to Inactive Environment
+    # -------------------------
+    - name: Deploy Game Service to Inactive Color
+      run: |
+        kubectl set image deployment/game-service-${inactive} game-service=chooladeva/game-service:${{ github.sha }}
+        kubectl rollout status deployment/game-service-${inactive} --timeout=2m
+
+    - name: Deploy Order Service to Inactive Color
+      run: |
+        kubectl set image deployment/order-service-${inactive} order-service=chooladeva/order-service:${{ github.sha }}
+        kubectl rollout status deployment/order-service-${inactive} --timeout=2m
+
+    - name: Deploy Analytics Service to Inactive Color
+      run: |
+        kubectl set image deployment/analytics-service-${inactive} analytics-service=chooladeva/analytics-service:${{ github.sha }}
+        kubectl rollout status deployment/analytics-service-${inactive} --timeout=2m
+
+    # -------------------------
+    # Run Integration Test Suite
+    # -------------------------
+    - name: Run Integration Tests on Inactive Environment
+      run: |
+        echo "Starting port-forwards to inactive pods..."
+        kubectl port-forward deployment/game-service-${inactive} 8001:8080 &
+        PID1=$!
+        kubectl port-forward deployment/order-service-${inactive} 8002:8080 &
+        PID2=$!
+        kubectl port-forward deployment/analytics-service-${inactive} 8003:8080 &
+        PID3=$!
+        sleep 5  # Allow port-forward to start
+
+        echo "Running pytest integration suite..."
+        pytest tests/integration/
+
+        echo "Killing port-forwards..."
+        kill $PID1 $PID2 $PID3
+
+    # -------------------------
+    # Switch Ingress to Inactive Color
+    # -------------------------
+    - name: Switch Ingress to Inactive Color
+      run: |
+        kubectl patch ingress lugx-ingress --type=json -p="[
+          {\"op\": \"replace\", \"path\": \"/spec/rules/0/http/paths/0/backend/service/name\", \"value\": \"game-service-${inactive}\"},
+          {\"op\": \"replace\", \"path\": \"/spec/rules/0/http/paths/1/backend/service/name\", \"value\": \"order-service-${inactive}\"},
+          {\"op\": \"replace\", \"path\": \"/spec/rules/0/http/paths/2/backend/service/name\", \"value\": \"analytics-service-${inactive}\"}
+        ]"
+
+    # -------------------------
+    # Update Active Marker
+    # -------------------------
+    - name: Update Active Color Marker
+      run: |
+        # TODO: persist new active color in ConfigMap/repo
+        echo "New active color: $inactive"

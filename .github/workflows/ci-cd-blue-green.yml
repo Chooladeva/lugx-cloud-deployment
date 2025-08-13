@@ -104,7 +104,7 @@ jobs:
       run: |
         INACTIVE=${{ steps.set-inactive-color.outputs.inactive }}
         kubectl set image deployment/analytics-service-$INACTIVE analytics=chooladeva/analytics-service:${{ github.sha }}
-        kubectl rollout status deployment/analytics-service-$INACT
+        kubectl rollout status deployment/analytics-service-$INACTIVE
 
       # -------------------------
       # Set up Python in the same job

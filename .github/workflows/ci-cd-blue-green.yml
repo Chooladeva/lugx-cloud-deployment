@@ -2,7 +2,7 @@ name: CI/CD Blue-Green Deployment
 
 on:
   push:
-    branches: [new-main1]  # Change to main after testing
+    branches: [main]
 
 env:
   PROJECT_ID: ${{ secrets.GKE_PROJECT }}

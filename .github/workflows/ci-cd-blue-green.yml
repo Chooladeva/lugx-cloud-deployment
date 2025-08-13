@@ -32,9 +32,8 @@ jobs:
     # -------------------------
     - name: Install GKE Auth Plugin
       run: |
-        gcloud components update -q
         gcloud components install gke-gcloud-auth-plugin -q
-        export USE_GKE_GCLOUD_AUTH_PLUGIN=True
+        echo "export USE_GKE_GCLOUD_AUTH_PLUGIN=True" >> $GITHUB_ENV
 
     # -------------------------
     # Configure kubectl
@@ -122,23 +121,14 @@ jobs:
     # -------------------------
     # Run Integration Tests
     # -------------------------
-    - name: Run Integration Tests on Inactive Environment
+    - name: Run Integration Test via Ingress
       run: |
-        INACTIVE=${{ steps.set-inactive-color.outputs.inactive }}
-        echo "Starting port-forwards to inactive pods ($INACTIVE)..."
-        kubectl port-forward deployment/game-service-$INACTIVE 8001:8080 &
-        PID1=$!
-        kubectl port-forward deployment/order-service-$INACTIVE 8002:8080 &
-        PID2=$!
-        kubectl port-forward deployment/analytics-service-$INACTIVE 8003:8080 &
-        PID3=$!
-        sleep 5
-
-        echo "Running pytest integration suite..."
+        echo "Running pytest integration suite against Ingress URLs..."
         pytest tests/integration/
-
-        echo "Killing port-forwards..."
-        kill $PID1 $PID2 $PID3 || true
+      env:
+        BASE_URL_GAMES: http://app.lugx.cloud/api/games/
+        BASE_URL_ORDERS: http://app.lugx.cloud/api/orders/
+        BASE_URL_ANALYTICS: http://app.lugx.cloud/api/analytics/event
 
     # -------------------------
     # Switch Ingress to Inactive Color

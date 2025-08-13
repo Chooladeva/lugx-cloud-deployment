@@ -103,7 +103,7 @@ jobs:
     - name: Deploy Analytics Service to Inactive Color
       run: |
         INACTIVE=${{ steps.set-inactive-color.outputs.inactive }}
-        kubectl set image deployment/analytics-service-$INACTIVE analytics-service=chooladeva/analytics-service:${{ github.sha }}
+        kubectl set image deployment/analytics-service-$INACTIVE analytics=chooladeva/analytics-service:${{ github.sha }}
         kubectl rollout status deployment/analytics-service-$INACTIVE
 
     # -------------------------

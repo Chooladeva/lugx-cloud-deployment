@@ -5,7 +5,7 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
-    - host: app.lugx.cloud
+    - host: mylugxtestdomain.duckdns.org
       http:
         paths:
           - path: /api/analytics/

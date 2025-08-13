@@ -10,6 +10,7 @@ env:
   ZONE: ${{ secrets.GKE_ZONE }}
   DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
   DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+  BASE_URL: "http://mylugxtestdomain.duckdns.org"
 
 jobs:
   deploy:
@@ -126,9 +127,9 @@ jobs:
         echo "Running pytest integration suite against Ingress URLs..."
         pytest tests/integration/
       env:
-        BASE_URL_GAMES: http://app.lugx.cloud/api/games/
-        BASE_URL_ORDERS: http://app.lugx.cloud/api/orders/
-        BASE_URL_ANALYTICS: http://app.lugx.cloud/api/analytics/event
+        BASE_URL_GAMES: http://mylugxtestdomain.duckdns.org/api/games/
+        BASE_URL_ORDERS: http://mylugxtestdomain.duckdns.org/api/orders/
+        BASE_URL_ANALYTICS: http://mylugxtestdomain.duckdns.org/api/analytics/event
 
     # -------------------------
     # Switch Ingress to Inactive Color
@@ -137,9 +138,9 @@ jobs:
       run: |
         INACTIVE=${{ steps.set-inactive-color.outputs.inactive }}
         kubectl patch ingress lugx-ingress --type=json -p="[
-          {\"op\": \"replace\", \"path\": \"/spec/rules/0/http/paths/0/backend/service/name\", \"value\": \"game-service-$INACTIVE\"},
+          {\"op\": \"replace\", \"path\": \"/spec/rules/0/http/paths/0/backend/service/name\", \"value\": \"analytics-service-$INACTIVE\"},
           {\"op\": \"replace\", \"path\": \"/spec/rules/0/http/paths/1/backend/service/name\", \"value\": \"order-service-$INACTIVE\"},
-          {\"op\": \"replace\", \"path\": \"/spec/rules/0/http/paths/2/backend/service/name\", \"value\": \"analytics-service-$INACTIVE\"}
+          {\"op\": \"replace\", \"path\": \"/spec/rules/0/http/paths/2/backend/service/name\", \"value\": \"game-service-$INACTIVE\"}
         ]"
 
     # -------------------------

@@ -21,6 +21,8 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
+    # Authenticate GitHub Actions to the Google Cloud project and Setup CLI
+
     - name: Authenticate to GCP
       uses: google-github-actions/auth@v2
       with:
@@ -30,7 +32,7 @@ jobs:
       uses: google-github-actions/setup-gcloud@v1
 
     # -------------------------
-    # Install GKE Auth Plugin (correct method)
+    # Install GKE Auth Plugin to ensure kubectl can authenticate with GKE
     # -------------------------
     - name: Install GKE Auth Plugin
       run: |
@@ -38,14 +40,15 @@ jobs:
         echo "export USE_GKE_GCLOUD_AUTH_PLUGIN=True" >> $GITHUB_ENV
 
     # -------------------------
-    # Configure kubectl
+    # Configure kubectl to to manage deployments
     # -------------------------
     - name: Configure kubectl
       run: |
         gcloud container clusters get-credentials $CLUSTER --zone $ZONE --project $PROJECT_ID
 
     # -------------------------
-    # Determine Active / Inactive Color
+    # Determine Active / Inactive Color- blue (active) and green (inactive)
+    # Deploy updates to the inactive color first, test it, then switch traffic
     # -------------------------
     - name: Get Active Color
       id: get-active-color
@@ -87,7 +90,7 @@ jobs:
         docker push chooladeva/analytics-service:${{ github.sha }}
 
     # -------------------------
-    # Deploy to Inactive Color
+    # Deploy to Inactive Color- Updates the inactive deployment with the new Docker image
     # -------------------------
     - name: Deploy Game Service to Inactive Color
       run: |
@@ -108,7 +111,7 @@ jobs:
         kubectl rollout status deployment/analytics-service-$INACTIVE
 
     # -------------------------
-    # Set up Python in the same job
+    # Set up Python & Install Dependencies
     # -------------------------
     - name: Set up Python
       uses: actions/setup-python@v4
@@ -133,7 +136,7 @@ jobs:
         BASE_URL_ANALYTICS: http://mylugxtestdomain.duckdns.org/api/analytics/event
 
     # -------------------------
-    # Switch Ingress to Inactive Color
+    # Switch Ingress to Inactive Color- Updates the Ingress backend to route traffic to the newly deployed inactive color
     # -------------------------
     - name: Switch Ingress to Inactive Color
       run: |
@@ -145,7 +148,7 @@ jobs:
         ]"
 
     # -------------------------
-    # Update Active Marker
+    # Update Active Marker- Marks which color is now active
     # -------------------------
     - name: Update Active Color Marker
       run: |

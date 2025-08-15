@@ -1,5 +1,5 @@
 function sendEvent(eventType, extraData = {}) {
-    fetch("http://app.lugx.cloud:8080/api/analytics/event", {
+    fetch("http://mylugxtestdomain.duckdns.org/api/analytics/event", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

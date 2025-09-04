@@ -63,22 +63,20 @@ Order Service UI
 Order Service POST endpoints
 
 ![Alt text](images/8.png)  
-
+PowerBI Analytics Dashboard
 
 ![Alt text](images/9.png)  
-
-
+GKE Observability Dashbord I
 
 ![Alt text](images/10.png)  
-
-
+GKE Observability Dashbord II
 
 ![Alt text](images/11.png)  
+GKE Observability Dashbord III
 
 
+## 4.	CI/CD Pipeline Process
 
-
-5.	CI/CD Pipeline Process
 To ensure the rapid and reliable delivery of services for the Lugx Gaming platform, a fully automated CI/CD pipeline was implemented using GitHub Actions, Docker Hub, and Google Kubernetes Engine (GKE). The deployment process follows a blue-green deployment strategy, maintaining 100% uptime by routing traffic through the active environment while validating the new deployment in an isolated inactive environment. After each deployment, automated health checks are triggered to validate core functionality.
 
 #### Pipeline Overview
@@ -114,7 +112,7 @@ To maintain confidence in each deployment, an automated test suite was built int
 ![Alt text](images/13.png)   
 Workflow Execution
 
-## 7.	Runbook: Deploying and Validating the Lugx Gaming Platform
+## 5.	Runbook: Deploying and Validating the Lugx Gaming Platform
 
 1.	Provision the Kubernetes Environment
 Set up a Kubernetes cluster using Google Kubernetes Engine (GKE) or a virtual machine (EC2) with kubeadm. Ensure the cluster has enough compute resources to host all services and database workloads. Install kubectl locally and connect it to the cluster using service account credentials or gcloud CLI. Verify access using kubectl get nodes.

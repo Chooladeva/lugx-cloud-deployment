@@ -47,68 +47,103 @@ Figure 2- Deployment Architecture
 
 This layered deployment ensures the system is both reliable and scalable, meeting modern cloud application standards.  
 
+![Alt text](images/3.png)  
+Frontend Deployment
 
+![Alt text](images/4.png)  
+Game Service UI
+
+![Alt text](images/5.png)  
+Game Service POST endpoints
+
+![Alt text](images/6.png)  
+Order Service UI
+
+![Alt text](images/7.png)  
+Order Service POST endpoints
+
+![Alt text](images/8.png)  
+
+
+![Alt text](images/9.png)  
+
+
+
+![Alt text](images/10.png)  
+
+
+
+![Alt text](images/11.png)  
 
 
 
 
 5.	CI/CD Pipeline Process
 To ensure the rapid and reliable delivery of services for the Lugx Gaming platform, a fully automated CI/CD pipeline was implemented using GitHub Actions, Docker Hub, and Google Kubernetes Engine (GKE). The deployment process follows a blue-green deployment strategy, maintaining 100% uptime by routing traffic through the active environment while validating the new deployment in an isolated inactive environment. After each deployment, automated health checks are triggered to validate core functionality.
-Pipeline Overview
+
+#### Pipeline Overview
 This pipeline automates the entire lifecycle from source code changes to production deployment while maintaining zero downtime and supporting automated integration testing.
- 
+
+![Alt text](images/12.png)    
 Figure 3- CI/CD Pipeline Design
+
 Below is a step-by-step breakdown of how this strategy is implemented through the GitHub Actions pipeline:
-•	Trigger on Push to Main Branch: The workflow starts automatically when new code is pushed to the main branch.
-•	Checkout Source Code: It pulls the latest application code from the GitHub repository for building.
-•	Authenticate to Google Cloud: Using a service account key, the pipeline securely connects to GCP to access the Kubernetes cluster.
-•	Set Up SDK and kubectl: The Google Cloud SDK and kubectl are configured to manage deployments.
-•	Determine Active vs. Inactive Color: The script checks whether blue or green is currently live and selects the opposite color for deployment.
-•	Build and Push Docker Images: Docker images are built for game-service, order-service, and analytics-service, tagged with the Git commit SHA, and pushed to Docker Hub.
-•	Deploy to Inactive Environment: New versions are deployed to the inactive color environment for testing.
-•	Verify Rollout: The system waits until all pods in the new environment are healthy.
-•	Run Integration Tests: Automated tests simulate API calls to confirm all services behave as expected.
-•	Switch Ingress to Inactive Color: Once verified, the Ingress is updated to route traffic to the newly tested environment, making it live.
-•	Update Active Marker: The deployment process will store the new active color to ensure correct tracking in future releases.
-Security and Ethical Challenges in the CI/CD Pipeline
+- Trigger on Push to Main Branch: The workflow starts automatically when new code is pushed to the main branch.
+- Checkout Source Code: It pulls the latest application code from the GitHub repository for building.
+- Authenticate to Google Cloud: Using a service account key, the pipeline securely connects to GCP to access the Kubernetes cluster.
+- Set Up SDK and kubectl: The Google Cloud SDK and kubectl are configured to manage deployments.
+- Determine Active vs. Inactive Color: The script checks whether blue or green is currently live and selects the opposite color for deployment.
+- Build and Push Docker Images: Docker images are built for game-service, order-service, and analytics-service, tagged with the Git commit SHA, and pushed to Docker Hub.
+- Deploy to Inactive Environment: New versions are deployed to the inactive color environment for testing.
+- Verify Rollout: The system waits until all pods in the new environment are healthy.
+- Run Integration Tests: Automated tests simulate API calls to confirm all services behave as expected.
+- Switch Ingress to Inactive Color: Once verified, the Ingress is updated to route traffic to the newly tested environment, making it live.
+- Update Active Marker: The deployment process will store the new active color to ensure correct tracking in future releases.
+
+#### Security and Ethical Challenges in the CI/CD Pipeline
 While the CI/CD pipeline greatly enhances the speed and reliability of deployments, it also introduces certain risks that must be handled carefully to ensure the platform remains secure and ethically sound.
-•	Credential Management: GitHub Actions requires sensitive credentials (like GCP service keys and Docker tokens). Securely storing them using GitHub Secrets and applying branch protection rules, ensure they remain protected from unauthorized access.
-•	Safe Docker Image Handling: There’s always a risk of insecure or malicious code slipping into container images. To prevent this, we use lightweight, verified base images and perform security scans before pushing to Docker Hub.
-•	Ingress Exposure: Exposing services to the internet increases the risk of attacks. In production, measures like HTTPS, rate limiting, and endpoint authentication would be essential to mitigate these risks.
-•	Pipeline Integrity: To avoid the risk of unauthorized code deployment, the pipeline is restricted to the main branch and only trusted contributors have access. The GKE cluster also uses RBAC for stricter control.
-Ethical Considerations:
-•	Service Disruption Risks- Automating the CI/CD pipeline introduces the risk of service downtime if a faulty deployment is released. To minimize this risk, it is essential to implement health checks, set up notifications, incorporate fallback mechanisms such as automatic rollbacks or blue-green deployments.
-Test Automation Suite
-To maintain confidence in each deployment, an automated test suite was built into the CI/CD workflow. This suite checks the core API functionality of all microservices—namely the Game Service, Order Service, and Analytics Service—by simulating real user requests to endpoints like /api/games, /api/orders, and /api/analytics. These tests run immediately after the new version is deployed to the inactive environment (as part of the Blue-Green strategy), acting as a safety net before any changes go live.                       (615)
+- Credential Management: GitHub Actions requires sensitive credentials (like GCP service keys and Docker tokens). Securely storing them using GitHub Secrets and applying branch protection rules, ensure they remain protected from unauthorized access.
+- Safe Docker Image Handling: There’s always a risk of insecure or malicious code slipping into container images. To prevent this, we use lightweight, verified base images and perform security scans before pushing to Docker Hub.
+- Ingress Exposure: Exposing services to the internet increases the risk of attacks. In production, measures like HTTPS, rate limiting, and endpoint authentication would be essential to mitigate these risks.
+- Pipeline Integrity: To avoid the risk of unauthorized code deployment, the pipeline is restricted to the main branch and only trusted contributors have access. The GKE cluster also uses RBAC for stricter control.
+- Service Disruption Risks- Automating the CI/CD pipeline introduces the risk of service downtime if a faulty deployment is released. To minimize this risk, it is essential to implement health checks, set up notifications, incorporate fallback mechanisms such as automatic rollbacks or blue-green deployments.
 
+##### Test Automation Suite
+To maintain confidence in each deployment, an automated test suite was built into the CI/CD workflow. This suite checks the core API functionality of all microservices—namely the Game Service, Order Service, and Analytics Service—by simulating real user requests to endpoints like /api/games, /api/orders, and /api/analytics. These tests run immediately after the new version is deployed to the inactive environment (as part of the Blue-Green strategy), acting as a safety net before any changes go live.                       
 
+![Alt text](images/13.png)   
+Workflow Execution
 
-6.	Runbook: Deploying and Validating the Lugx Gaming Platform
+## 7.	Runbook: Deploying and Validating the Lugx Gaming Platform
 
 1.	Provision the Kubernetes Environment
 Set up a Kubernetes cluster using Google Kubernetes Engine (GKE) or a virtual machine (EC2) with kubeadm. Ensure the cluster has enough compute resources to host all services and database workloads. Install kubectl locally and connect it to the cluster using service account credentials or gcloud CLI. Verify access using kubectl get nodes.
-2.     Deploy Databases
+
+2. Deploy Databases
 PostgreSQL: Use a StatefulSet or Deployment to spin up a PostgreSQL pod. Configure persistent volumes to save data across restarts. Set environment variables for the user, password, and database name utilizing Kubernetes Secrets.
 ClickHouse: Deploy ClickHouse using the official Docker image. Set up the HTTP interface for data intake and querying. Expose the service internally within the cluster.
-3.     Deploy Microservices
+
+3. Deploy Microservices
 Build Docker images for the following services and push them to Docker Hub:
-•	game-service: Manages CRUD operations on game catalog data.
-•	order-service: Records purchases, cart data, and timestamps.
-•	analytics-service: Receives user event data (scrolls, clicks, session time) and stores it in ClickHouse.
+- game-service: Manages CRUD operations on game catalog data.
+- order-service: Records purchases, cart data, and timestamps.
+- analytics-service: Receives user event data (scrolls, clicks, session time) and stores it in ClickHouse.
+
 Deploy both blue and green variants for each service (e.g., game-service-blue, game-service-green). Use separate Deployments and Services for each color. All services are exposed internally and routed externally via NGINX Ingress.
 
-
-4.     Frontend Deployment
+4. Frontend Deployment
 Build the static frontend with analytics tracking JS. Deploy it as a pod, exposing it through Ingress. Ensure analytics events POST to /api/analytics/event. Use ConfigMaps or ENV variables to inject API endpoints if needed.
-5.     CI/CD Pipeline Execution
+
+5. CI/CD Pipeline Execution
 Run the GitHub Actions workflow:
-•	Authenticates to GKE.
-•	Builds and tags Docker images.
-•	Deploys to the inactive color.
-•	Validates pods using kubectl rollout status.
-•	Runs test suite using curl or pytest.
-•	Updates Ingress routing to the newly verified environment.
-6.     Monitoring and Validation
-Enable GKE Observability (Cloud Operations Suite). Monitor logs, metrics, and error rates. Use kubectl get pods and kubectl logs to check container health.
-Use ClickHouse queries (SELECT * FROM web_events) to confirm event ingestion.
-Visualize results in Microsoft Power BI after exporting analytics data to S3 using a Python boto3 script.
+- Authenticates to GKE.
+- Builds and tags Docker images.
+- Deploys to the inactive color.
+- Validates pods using kubectl rollout status.
+- Runs test suite using curl or pytest.
+- Updates Ingress routing to the newly verified environment.
+
+6. Monitoring and Validation
+- Enable GKE Observability (Cloud Operations Suite). Monitor logs, metrics, and error rates. Use kubectl get pods and kubectl logs to check container health.
+- Use ClickHouse queries (SELECT * FROM web_events) to confirm event ingestion.
+- Visualize results in Microsoft Power BI after exporting analytics data to S3 using a Python boto3 script.

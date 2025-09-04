@@ -10,9 +10,10 @@ The architecture is based on microservices, a design pattern where independent s
 
 All services are containerized using Docker and orchestrated by Kubernetes (Minikube for development and Google Kubernetes Engine for production). An NGINX Ingress controller handles routing and load balancing, exposing the frontend and API endpoints securely.
 
-![Alt text](1.png)            
+![Alt text](images/1.png)            
 Figure 1- Solution Architecture        
-System Flow Overview
+
+#### System Flow Overview
 - Users interact with the frontend by browsing pages, viewing game listings, and clicking interface buttons.
 - The frontend sends API requests to backend services such as GET /games and POST /orders.
 - Game Service and Order Service interact with PostgreSQL to store or retrieve necessary data.
@@ -28,6 +29,7 @@ Microsoft Power BI fetches data from ClickHouse, which is first exported and upl
 These visualizations help stakeholders make informed decisions about user interface design and marketing campaigns.                                                                                  
 
 ## 3.	Deployment Architecture
+
 This section explains how the system is implemented on cloud infrastructure using Kubernetes (GKE) and other managed services.
 Key Deployment Flows
 - External user traffic first passes through the NGINX Ingress controller, which directs requests to the correct service or frontend pod.
@@ -37,7 +39,7 @@ Key Deployment Flows
 ![Alt text](images/2.png)        
 Figure 2- Deployment Architecture
 
-Infrastructure Highlights:
+#### Infrastructure Highlights:
 - GKE manages Kubernetes clusters, providing scalable and resilient orchestration of containers.
 - The ingress controller enables secure external access with SSL termination and fine-grained routing.
 - GitHub Actions enables rapid, automated deployments with rollback capability through the blue-green deployment pattern.

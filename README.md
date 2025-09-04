@@ -1,42 +1,54 @@
 ## 1.	Introduction
-Lugx Gaming is an online storefront that sells video games, aiming to modernize its platform by moving to a cloud-native infrastructure. The main goal of this project was to deploy their existing frontend application together with backend microservices inside a Kubernetes environment, allowing for better scalability, security, and fault tolerance. In addition to deploying the application, this project also focused on capturing real-time user interaction data through web analytics and then visualizing this data with Microsoft Power BI to gain useful business insights. This report details the design of the system, the technologies employed, the deployment process, the security measures implemented, and the testing methodology. It aims to provide a comprehensive understanding of the solution, highlighting both technical and practical considerations.                                              (123)
+Lugx Gaming is an online storefront that sells video games, aiming to modernize its platform by moving to a cloud-native infrastructure. The main goal of this project was to deploy their existing frontend application together with backend microservices inside a Kubernetes environment, allowing for better scalability, security, and fault tolerance. In addition to deploying the application, this project also focused on capturing real-time user interaction data through web analytics and then visualizing this data with Microsoft Power BI to gain useful business insights. This report details the design of the system, the technologies employed, the deployment process, the security measures implemented, and the testing methodology. It aims to provide a comprehensive understanding of the solution, highlighting both technical and practical considerations.                                              
 
 ## 2.	Solution Architecture
 The architecture is based on microservices, a design pattern where independent services handle specific functions. This approach improves flexibility and makes scaling easier, as each service can be managed separately.
-•	Frontend: This is the web application interface that users interact with. Developed by Lugx Gaming, it allows users to browse available games and place orders.
-•	Game Service—Created using FastAPI, this service manages game data such as the name, category, release date, and price. It supports all CRUD (create, read, update, delete) operations and stores data in a PostgreSQL relational database.
-•	Order Service—Also implemented using FastAPI, it records orders submitted by users, including cart items and total cost, ensuring transactional consistency with the relational database.
-•	Analytics Service—JavaScript embedded in the frontend collects interaction metrics (page views, clicks, scroll depth, session time). This data is sent to the Analytics Service, which then formats and writes data to ClickHouse using its HTTP API.
+- Frontend: This is the web application interface that users interact with. Developed by Lugx Gaming, it allows users to browse available games and place orders.
+- Game Service—Created using FastAPI, this service manages game data such as the name, category, release date, and price. It supports all CRUD (create, read, update, delete) operations and stores data in a PostgreSQL relational database.
+- Order Service—Also implemented using FastAPI, it records orders submitted by users, including cart items and total cost, ensuring transactional consistency with the relational database.
+- Analytics Service—JavaScript embedded in the frontend collects interaction metrics (page views, clicks, scroll depth, session time). This data is sent to the Analytics Service, which then formats and writes data to ClickHouse using its HTTP API.
+
 All services are containerized using Docker and orchestrated by Kubernetes (Minikube for development and Google Kubernetes Engine for production). An NGINX Ingress controller handles routing and load balancing, exposing the frontend and API endpoints securely.
- 
+
+![Alt text](1.png)            
 Figure 1- Solution Architecture        
 System Flow Overview
-•	Users interact with the frontend by browsing pages, viewing game listings, and clicking interface buttons.
-•	The frontend sends API requests to backend services such as GET /games and POST /orders.
-•	Game Service and Order Service interact with PostgreSQL to store or retrieve necessary data.
-•	User events such as page_view, add_to_cart, search_click, scroll depth percentages, and category_click are captured via JavaScript and sent to the Analytics Service backend.
-•	The Analytics Service writes these events to ClickHouse via the HTTP API into the web_events table.
-•	Game and Order services persist their data into PostgreSQL, including game details like title, genre, and price, and order details like cart items, total cost, and timestamps.
+- Users interact with the frontend by browsing pages, viewing game listings, and clicking interface buttons.
+- The frontend sends API requests to backend services such as GET /games and POST /orders.
+- Game Service and Order Service interact with PostgreSQL to store or retrieve necessary data.
+- User events such as page_view, add_to_cart, search_click, scroll depth percentages, and category_click are captured via JavaScript and sent to the Analytics Service backend.
+- The Analytics Service writes these events to ClickHouse via the HTTP API into the web_events table.
+- Game and Order services persist their data into PostgreSQL, including game details like title, genre, and price, and order details like cart items, total cost, and timestamps.
+
 Microsoft Power BI fetches data from ClickHouse, which is first exported and uploaded to Amazon S3 using a custom API that connects via the AWS SDK for Amazon S3, facilitating seamless data transfer. The resulting interactive dashboards present key engagement metrics through charts such as
-•	Event Count by Type
-•	Page Views by Page
-•	Scroll Depth Distribution
-•	Average Session Duration per Page
-These visualizations help stakeholders make informed decisions about user interface design and marketing campaigns.                                                                                  (383)
-3.	Deployment Architecture
+- Event Count by Type
+- Page Views by Page
+- Scroll Depth Distribution
+- Average Session Duration per Page
+These visualizations help stakeholders make informed decisions about user interface design and marketing campaigns.                                                                                  
+
+## 3.	Deployment Architecture
 This section explains how the system is implemented on cloud infrastructure using Kubernetes (GKE) and other managed services.
 Key Deployment Flows
-•	External user traffic first passes through the NGINX Ingress controller, which directs requests to the correct service or frontend pod.
-•	GitHub Actions automates CI/CD by building and pushing Docker images and deploying them to Kubernetes using a blue-green deployment model.
-•	GKE’s Cloud Operations Suite provides observability by collecting logs, metrics, and traces to monitor service health and performance.
- 
+- External user traffic first passes through the NGINX Ingress controller, which directs requests to the correct service or frontend pod.
+- GitHub Actions automates CI/CD by building and pushing Docker images and deploying them to Kubernetes using a blue-green deployment model.
+- GKE’s Cloud Operations Suite provides observability by collecting logs, metrics, and traces to monitor service health and performance.
+
+![Alt text](images/2.png)        
 Figure 2- Deployment Architecture
+
 Infrastructure Highlights:
-•	GKE manages Kubernetes clusters, providing scalable and resilient orchestration of containers.
-•	The ingress controller enables secure external access with SSL termination and fine-grained routing.
-•	GitHub Actions enables rapid, automated deployments with rollback capability through the blue-green deployment pattern.
-•	Observability tools give insights into the system’s health, enabling quick detection of issues.
+- GKE manages Kubernetes clusters, providing scalable and resilient orchestration of containers.
+- The ingress controller enables secure external access with SSL termination and fine-grained routing.
+- GitHub Actions enables rapid, automated deployments with rollback capability through the blue-green deployment pattern.
+- Observability tools give insights into the system’s health, enabling quick detection of issues.
+
 This layered deployment ensures the system is both reliable and scalable, meeting modern cloud application standards.  
+
+
+
+
+
 
 5.	CI/CD Pipeline Process
 To ensure the rapid and reliable delivery of services for the Lugx Gaming platform, a fully automated CI/CD pipeline was implemented using GitHub Actions, Docker Hub, and Google Kubernetes Engine (GKE). The deployment process follows a blue-green deployment strategy, maintaining 100% uptime by routing traffic through the active environment while validating the new deployment in an isolated inactive environment. After each deployment, automated health checks are triggered to validate core functionality.

@@ -1,14 +1,16 @@
-## 1.	Introduction
+# Cloud-Native Microservices Deployment with Kubernetes and CI/CD Automatio
+
+## Executive Summary
 Lugx Gaming is an online storefront that sells video games, aiming to modernize its platform by moving to a cloud-native infrastructure. The main goal of this project was to deploy their existing frontend application together with backend microservices inside a Kubernetes environment, allowing for better scalability, security, and fault tolerance. In addition to deploying the application, this project also focused on capturing real-time user interaction data through web analytics and then visualizing this data with Microsoft Power BI to gain useful business insights. This report details the design of the system, the technologies employed, the deployment process, the security measures implemented, and the testing methodology. It aims to provide a comprehensive understanding of the solution, highlighting both technical and practical considerations.                                              
 
-## 2.	Solution Architecture
+## Solution Architecture
 The architecture is based on microservices, a design pattern where independent services handle specific functions. This approach improves flexibility and makes scaling easier, as each service can be managed separately.
-- Frontend: This is the web application interface that users interact with. Developed by Lugx Gaming, it allows users to browse available games and place orders.
-- Game Service—Created using FastAPI, this service manages game data such as the name, category, release date, and price. It supports all CRUD (create, read, update, delete) operations and stores data in a PostgreSQL relational database.
-- Order Service—Also implemented using FastAPI, it records orders submitted by users, including cart items and total cost, ensuring transactional consistency with the relational database.
-- Analytics Service—JavaScript embedded in the frontend collects interaction metrics (page views, clicks, scroll depth, session time). This data is sent to the Analytics Service, which then formats and writes data to ClickHouse using its HTTP API.
+- **Frontend:** This is the web application interface that users interact with. Developed by Lugx Gaming, it allows users to browse available games and place orders.
+- **Game Service:** Created using FastAPI, this service manages game data such as the name, category, release date, and price. It supports all CRUD (create, read, update, delete) operations and stores data in a PostgreSQL relational database.
+- **Order Service:** Also implemented using FastAPI, it records orders submitted by users, including cart items and total cost, ensuring transactional consistency with the relational database.
+- **Analytics Service:** JavaScript embedded in the frontend collects interaction metrics (page views, clicks, scroll depth, session time). This data is sent to the Analytics Service, which then formats and writes data to ClickHouse using its HTTP API.
 
-All services are containerized using Docker and orchestrated by Kubernetes (Minikube for development and Google Kubernetes Engine for production). An NGINX Ingress controller handles routing and load balancing, exposing the frontend and API endpoints securely.
+**All services are containerized using Docker and orchestrated by Kubernetes (Minikube for development and Google Kubernetes Engine for production). An NGINX Ingress controller handles routing and load balancing, exposing the frontend and API endpoints securely.**
 
 ![Alt text](images/1.png)            
 Figure 1- Solution Architecture        
@@ -28,7 +30,7 @@ Microsoft Power BI fetches data from ClickHouse, which is first exported and upl
 - Average Session Duration per Page
 These visualizations help stakeholders make informed decisions about user interface design and marketing campaigns.                                                                                  
 
-## 3.	Deployment Architecture
+## Deployment Architecture
 
 This section explains how the system is implemented on cloud infrastructure using Kubernetes (GKE) and other managed services.
 Key Deployment Flows
@@ -75,7 +77,7 @@ GKE Observability Dashbord II
 GKE Observability Dashbord III
 
 
-## 4.	CI/CD Pipeline Process
+## CI/CD Pipeline Process
 
 To ensure the rapid and reliable delivery of services for the Lugx Gaming platform, a fully automated CI/CD pipeline was implemented using GitHub Actions, Docker Hub, and Google Kubernetes Engine (GKE). The deployment process follows a blue-green deployment strategy, maintaining 100% uptime by routing traffic through the active environment while validating the new deployment in an isolated inactive environment. After each deployment, automated health checks are triggered to validate core functionality.
 
@@ -112,7 +114,7 @@ To maintain confidence in each deployment, an automated test suite was built int
 ![Alt text](images/13.png)   
 Workflow Execution
 
-## 5.	Runbook: Deploying and Validating the Lugx Gaming Platform
+## Runbook: Deploying and Validating the Lugx Gaming Platform
 
 1.	Provision the Kubernetes Environment
 Set up a Kubernetes cluster using Google Kubernetes Engine (GKE) or a virtual machine (EC2) with kubeadm. Ensure the cluster has enough compute resources to host all services and database workloads. Install kubectl locally and connect it to the cluster using service account credentials or gcloud CLI. Verify access using kubectl get nodes.
@@ -145,3 +147,31 @@ Run the GitHub Actions workflow:
 - Enable GKE Observability (Cloud Operations Suite). Monitor logs, metrics, and error rates. Use kubectl get pods and kubectl logs to check container health.
 - Use ClickHouse queries (SELECT * FROM web_events) to confirm event ingestion.
 - Visualize results in Microsoft Power BI after exporting analytics data to S3 using a Python boto3 script.
+
+## Technology Stack
+
+Backend
+- Python
+- FastAPI
+
+Databases
+- PostgreSQL
+- ClickHouse
+
+Containerization
+- Docker
+
+Orchestration
+- Kubernetes
+- Google Kubernetes Engine
+
+CI/CD
+- GitHub Actions
+- Docker Hub
+
+Cloud Services
+- Amazon S3
+- Google Cloud Operations Suite
+
+BI & Visualization
+- Microsoft Power BI
